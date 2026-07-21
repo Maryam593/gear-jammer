@@ -1,7 +1,9 @@
 import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Popup } from 'react-leaflet'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { Play, Square } from 'lucide-react'
 import L from 'leaflet'
 import { categoricalColors, usePrefersDark, STOP_COLOR_KEY, STOP_SHAPE, STOP_LABEL } from '../theme/vizColors'
+import AnimatedTruckMarker from './AnimatedTruckMarker'
 
 function formatHour(hour) {
   const h = Math.floor(hour)
@@ -34,6 +36,7 @@ function StopPopup({ type, stop }) {
 export default function RouteMap({ route, stops }) {
   const dark = usePrefersDark()
   const colors = categoricalColors(dark)
+  const [playing, setPlaying] = useState(false)
 
   const positions = useMemo(
     () => route.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
@@ -43,13 +46,33 @@ export default function RouteMap({ route, stops }) {
   const startPosition = positions[0]
 
   return (
-    <div className="h-[420px] w-full overflow-hidden rounded-2xl border-2 border-orange-100 shadow-sm dark:border-slate-800">
+    <div className="relative h-[420px] w-full overflow-hidden rounded-2xl border-2 border-orange-100 shadow-sm dark:border-slate-800">
+      <button
+        type="button"
+        onClick={() => setPlaying((p) => !p)}
+        className="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-orange-700 shadow-md transition hover:bg-orange-50 dark:bg-slate-900/95 dark:text-orange-300 dark:hover:bg-slate-800"
+      >
+        {playing ? (
+          <>
+            <Square className="h-3 w-3" aria-hidden="true" />
+            Stop
+          </>
+        ) : (
+          <>
+            <Play className="h-3 w-3" aria-hidden="true" />
+            Animate route
+          </>
+        )}
+      </button>
+
       <MapContainer bounds={positions} className="h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Polyline positions={positions} pathOptions={{ color: colors.blue, weight: 4, opacity: 0.85 }} />
+
+        <AnimatedTruckMarker positions={positions} stops={stops} playing={playing} onDone={() => setPlaying(false)} />
 
         {startPosition && (
           <CircleMarker
