@@ -89,6 +89,8 @@ export default function App() {
   const [error, setError] = useState(null)
   const [history, setHistory] = useState(() => loadHistory())
   const [selectedHistoryId, setSelectedHistoryId] = useState(null)
+  const [historyRoute, setHistoryRoute] = useState(null)
+  const [historyRouteLoading, setHistoryRouteLoading] = useState(false)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [historyPage, setHistoryPage] = useState(1)
@@ -154,6 +156,37 @@ export default function App() {
   }
 
   const selectedEntry = history.find((h) => h.id === selectedHistoryId) || null
+
+  // History entries never store route.geometry (thousands of coordinate
+  // points per trip, would blow past localStorage's quota after a handful of
+  // saves — see tripHistory.js). So the map is re-fetched on demand instead:
+  // same locations, deterministic result, no map at all if it fails (stops
+  // list and log sheets already work fine without it).
+  useEffect(() => {
+    if (!selectedHistoryId) {
+      setHistoryRoute(null)
+      return
+    }
+    const entry = history.find((h) => h.id === selectedHistoryId)
+    if (!entry) return
+
+    let cancelled = false
+    setHistoryRoute(null)
+    setHistoryRouteLoading(true)
+    ;(async () => {
+      try {
+        const data = useMock ? sampleResponse : await planTrip(entry.tripMeta)
+        if (!cancelled) setHistoryRoute(data.route)
+      } catch {
+        // Silent — the map is a nice-to-have here, everything else already works.
+      } finally {
+        if (!cancelled) setHistoryRouteLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [selectedHistoryId])
 
   return (
     <div className="app-bg min-h-svh">
@@ -227,6 +260,8 @@ export default function App() {
                   ← Back to history
                 </button>
                 <TripResultView
+                  route={historyRoute}
+                  routeLoading={historyRouteLoading}
                   stops={selectedEntry.stops}
                   daily_logs={selectedEntry.daily_logs}
                   tripMeta={selectedEntry.tripMeta}
@@ -241,7 +276,7 @@ export default function App() {
             ) : (
               <>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Your saved trips 🧾</h2>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Your saved trips</h2>
                   <button
                     type="button"
                     onClick={handleClearHistory}

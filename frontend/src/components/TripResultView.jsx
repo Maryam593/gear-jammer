@@ -65,7 +65,7 @@ function DriverNameModal({ initialValue, onCancel, onConfirm }) {
 // Shared by the live "Plan Trip" flow (has `route`, for the map) and the
 // History detail view (no `route` — it's excluded from what's persisted to
 // localStorage, so the map section is simply omitted there).
-export default function TripResultView({ route, stops, daily_logs, tripMeta }) {
+export default function TripResultView({ route, routeLoading, stops, daily_logs, tripMeta }) {
   const [exporting, setExporting] = useState(false)
   const [driverName, setDriverName] = useState('')
   const [showNamePrompt, setShowNamePrompt] = useState(false)
@@ -87,15 +87,21 @@ export default function TripResultView({ route, stops, daily_logs, tripMeta }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Your route 🗺️</h2>
+      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Your route</h2>
 
-      <div className={`grid grid-cols-1 gap-4 ${route ? 'lg:grid-cols-[1fr_320px]' : 'lg:grid-cols-1'}`}>
-        {route && <RouteMap route={route} stops={stops} />}
+      <div className={`grid grid-cols-1 gap-4 ${route || routeLoading ? 'lg:grid-cols-[1fr_320px]' : 'lg:grid-cols-1'}`}>
+        {route ? (
+          <RouteMap route={route} stops={stops} />
+        ) : routeLoading ? (
+          <div className="flex h-[420px] w-full animate-pulse items-center justify-center rounded-2xl border-2 border-orange-100 bg-orange-50/60 text-sm text-orange-700 dark:border-slate-800 dark:bg-slate-900 dark:text-orange-300">
+            Loading route map…
+          </div>
+        ) : null}
         <StopsList stops={stops} />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Daily log sheets 📋</h3>
+        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Daily log sheets</h3>
         <button
           type="button"
           onClick={() => setShowNamePrompt(true)}
