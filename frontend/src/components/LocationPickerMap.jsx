@@ -48,6 +48,10 @@ export default function LocationPickerMap({ onPick, active, onActiveChange }) {
 
   const handleClick = useCallback(
     async (latlng) => {
+      // Ignore clicks while a lookup is already in flight — rapid clicking
+      // would fire overlapping reverse-geocode requests against Nominatim's
+      // public server, which rate-limits aggressively (429s) per client.
+      if (pendingRole) return
       const role = active
       setMarkers((m) => ({ ...m, [role]: latlng }))
       setError(null)
@@ -61,7 +65,7 @@ export default function LocationPickerMap({ onPick, active, onActiveChange }) {
         setPendingRole(null)
       }
     },
-    [active, onPick],
+    [active, onPick, pendingRole],
   )
 
   return (
