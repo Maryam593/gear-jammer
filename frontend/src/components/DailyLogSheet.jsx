@@ -48,30 +48,48 @@ function formatHours(h) {
   return h % 1 === 0 ? `${h}` : h.toFixed(2)
 }
 
-export default function DailyLogSheet({ dayIndex, segments, recap, tripMeta }) {
+export default function DailyLogSheet({ dayIndex, segments, recap, tripMeta, driverName }) {
   const dark = usePrefersDark()
   const colors = categoricalColors(dark)
 
   const date = new Date()
   date.setDate(date.getDate() + dayIndex)
-  const dateLabel = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+  const dateParts = {
+    month: date.toLocaleDateString(undefined, { month: 'short' }),
+    day: date.getDate(),
+    year: date.getFullYear(),
+  }
 
   const totals = totalsByStatus(segments)
+  const hoursAvailableTomorrow = recap.cycle_hours_used != null ? Math.max(0, 70 - recap.cycle_hours_used) : null
 
   return (
     <div className="rounded-2xl border-2 border-orange-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3 border-b-2 border-dashed border-orange-100 pb-3 dark:border-slate-800">
         <div>
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-            Driver's Daily Log — Day {dayIndex + 1}
-          </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{dateLabel}</p>
-        </div>
-        {tripMeta && (
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Driver's Daily Log (24 hours)</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {tripMeta.pickupLocation} → {tripMeta.dropoffLocation}
+            {dateParts.month} / {dateParts.day} / {dateParts.year} · Day {dayIndex + 1}
           </p>
-        )}
+        </div>
+        <div className="text-sm text-slate-600 dark:text-slate-300">
+          <div>
+            <span className="text-slate-400 dark:text-slate-500">Driver: </span>
+            {driverName?.trim() || '—'}
+          </div>
+          {tripMeta && (
+            <div>
+              <span className="text-slate-400 dark:text-slate-500">From: </span>
+              {tripMeta.currentLocation}
+              <span className="text-slate-400 dark:text-slate-500"> To: </span>
+              {tripMeta.dropoffLocation}
+            </div>
+          )}
+          <div>
+            <span className="text-slate-400 dark:text-slate-500">Total miles driving today: </span>
+            {recap.miles_driven_today != null ? `${recap.miles_driven_today} mi` : '—'}
+          </div>
+        </div>
       </div>
 
       {/* legend — duty status -> color, doubles as the required legend for a
@@ -236,19 +254,33 @@ export default function DailyLogSheet({ dayIndex, segments, recap, tripMeta }) {
         </svg>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3 rounded-lg border-2 border-orange-100 p-3 text-sm dark:border-slate-800 sm:grid-cols-3">
-        <div>
-          <div className="text-slate-500 dark:text-slate-400">On-duty hours today</div>
-          <div className="font-semibold text-slate-800 dark:text-slate-100">{recap.on_duty_hours_today}h</div>
+      <div className="mt-3 rounded-lg border-2 border-orange-100 p-3 text-sm dark:border-slate-800">
+        <div className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase dark:text-slate-500">
+          Recap — 70-hour / 8-day rule
         </div>
-        <div>
-          <div className="text-slate-500 dark:text-slate-400">Driving hours today</div>
-          <div className="font-semibold text-slate-800 dark:text-slate-100">{recap.driving_hours_today}h</div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <div className="text-slate-500 dark:text-slate-400">On-duty today</div>
+            <div className="font-semibold text-slate-800 dark:text-slate-100">{recap.on_duty_hours_today}h</div>
+          </div>
+          <div>
+            <div className="text-slate-500 dark:text-slate-400">Driving today</div>
+            <div className="font-semibold text-slate-800 dark:text-slate-100">{recap.driving_hours_today}h</div>
+          </div>
+          <div>
+            <div className="text-slate-500 dark:text-slate-400">A. On-duty last 8 days</div>
+            <div className="font-semibold text-slate-800 dark:text-slate-100">{recap.cycle_hours_used}h</div>
+          </div>
+          <div>
+            <div className="text-slate-500 dark:text-slate-400">B. Available tomorrow (70 − A)</div>
+            <div className="font-semibold text-slate-800 dark:text-slate-100">
+              {hoursAvailableTomorrow != null ? `${hoursAvailableTomorrow.toFixed(2)}h` : '—'}
+            </div>
+          </div>
         </div>
-        <div>
-          <div className="text-slate-500 dark:text-slate-400">Cycle hours used (70/8)</div>
-          <div className="font-semibold text-slate-800 dark:text-slate-100">{recap.cycle_hours_used}h</div>
-        </div>
+        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+          If you took 34 consecutive hours off duty, you have 70 hours available.
+        </p>
       </div>
     </div>
   )

@@ -26,7 +26,7 @@ class _Trip:
         self.segments = []  # raw, absolute hours since trip start; may span >24h
         self.stops = []
 
-    def add_segment(self, status, duration):
+    def add_segment(self, status, duration, distance_miles=None):
         if duration <= EPS:
             return
         start, end = self.clock, self.clock + duration
@@ -48,7 +48,13 @@ class _Trip:
                 if duration >= RESTART_DURATION_HOURS - EPS:
                     self.cycle_used = 0.0
         self.segments.append(
-            {"status": status, "start_hour": start, "end_hour": end, "cycle_after": self.cycle_used}
+            {
+                "status": status,
+                "start_hour": start,
+                "end_hour": end,
+                "cycle_after": self.cycle_used,
+                "distance_miles": distance_miles,
+            }
         )
 
     def add_stop(self, stop_type, location, lat, lon, arrival_hour, duration):
@@ -129,8 +135,8 @@ class _Trip:
             positive_bounds = [b for b in bounds if b > EPS]
             chunk = min(positive_bounds) if positive_bounds else remaining_hours
 
-            self.add_segment("driving", chunk)
             chunk_miles = chunk * speed
+            self.add_segment("driving", chunk, distance_miles=chunk_miles)
             miles_driven += chunk_miles
             self.miles_since_fuel += chunk_miles
             self.total_miles += chunk_miles
@@ -152,6 +158,7 @@ def _bucket_into_days(segments):
         day_start, day_end = day * 24, day * 24 + 24
         day_segments = []
         cycle_used_end_of_day = None
+        miles_driven_today = 0.0
         for seg in segments:
             overlap_start = max(seg["start_hour"], day_start)
             overlap_end = min(seg["end_hour"], day_end)
@@ -165,6 +172,14 @@ def _bucket_into_days(segments):
                 }
             )
             cycle_used_end_of_day = seg["cycle_after"]
+            # Speed is constant within a single segment (see drive_leg), so the
+            # miles overlapping this day are the same fraction of the segment's
+            # total distance as the hours overlapping this day.
+            if seg["status"] == "driving" and seg.get("distance_miles"):
+                seg_duration = seg["end_hour"] - seg["start_hour"]
+                if seg_duration > EPS:
+                    frac = (overlap_end - overlap_start) / seg_duration
+                    miles_driven_today += seg["distance_miles"] * frac
         if not day_segments:
             continue
         on_duty_today = sum(s["end_hour"] - s["start_hour"] for s in day_segments if s["status"] == "on_duty")
@@ -176,6 +191,7 @@ def _bucket_into_days(segments):
                 "recap": {
                     "on_duty_hours_today": round(on_duty_today, 2),
                     "driving_hours_today": round(driving_today, 2),
+                    "miles_driven_today": round(miles_driven_today, 1),
                     "cycle_hours_used": round(cycle_used_end_of_day, 2)
                     if cycle_used_end_of_day is not None
                     else None,

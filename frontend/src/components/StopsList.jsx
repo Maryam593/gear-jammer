@@ -24,11 +24,11 @@ export default function StopsList({ stops }) {
   const colors = categoricalColors(dark)
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border-2 border-orange-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="mb-3 text-base font-bold text-slate-800 dark:text-slate-100">
+    <div className="flex max-h-[420px] flex-col rounded-2xl border-2 border-orange-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <h2 className="mb-3 shrink-0 text-base font-bold text-slate-800 dark:text-slate-100">
         Stops along the way <span className="font-normal text-slate-400 dark:text-slate-500">({stops.length})</span>
       </h2>
-      <ol className="flex flex-col gap-1">
+      <ol className="flex flex-col gap-1 overflow-y-auto">
         {stops.map((stop, i) => {
           const colorKey = STOP_COLOR_KEY[stop.type]
           const color = colorKey ? colors[colorKey] : '#64748b'

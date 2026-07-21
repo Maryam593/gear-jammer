@@ -67,7 +67,7 @@ export const sampleResponse = {
         { status: 'driving', start_hour: 10.0, end_hour: 14.0 },
         { status: 'off_duty', start_hour: 14.0, end_hour: 24.0 },
       ],
-      recap: { on_duty_hours_today: 5.0, driving_hours_today: 7.0, cycle_hours_used: 17.5 },
+      recap: { on_duty_hours_today: 5.0, driving_hours_today: 7.0, miles_driven_today: 749.2, cycle_hours_used: 17.5 },
     },
     {
       date_offset: 1,
@@ -77,7 +77,7 @@ export const sampleResponse = {
         { status: 'on_duty', start_hour: 4, end_hour: 5 },
         { status: 'off_duty', start_hour: 5, end_hour: 24 },
       ],
-      recap: { on_duty_hours_today: 3.0, driving_hours_today: 2.0, cycle_hours_used: 22.5 },
+      recap: { on_duty_hours_today: 3.0, driving_hours_today: 2.0, miles_driven_today: 214.0, cycle_hours_used: 22.5 },
     },
   ],
 }
