@@ -1,5 +1,8 @@
 const STORAGE_KEY = 'eld-trip-history'
-const MAX_ENTRIES = 20
+// No route.geometry is stored per entry (see below), so each entry is small —
+// safe to keep more than the old cap of 20 now that there's pagination to
+// browse through them.
+const MAX_ENTRIES = 50
 
 function randomId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
