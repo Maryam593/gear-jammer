@@ -92,7 +92,10 @@ export default function TripForm({ onSubmit, loading }) {
       noValidate
       className="rounded-2xl border-2 border-orange-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
-      <h2 className="mb-4 text-xl font-bold text-slate-800 dark:text-slate-100">Plan your trip 🚛</h2>
+      <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-slate-800 dark:text-slate-100">
+        Plan your trip
+        <Truck className="h-5 w-5 text-orange-600 dark:text-orange-400" strokeWidth={2.25} aria-hidden="true" />
+      </h2>
 
       <LocationPickerMap
         active={activeRole}
