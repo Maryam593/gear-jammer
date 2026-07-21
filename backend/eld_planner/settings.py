@@ -70,6 +70,22 @@ if DEBUG:
         r'^http://127\.0\.0\.1:\d+$',
     ]
 
+# Per-client throttling on the two endpoints that call external APIs
+# (Nominatim/OSRM). Nominatim's public server enforces ~1 request/second
+# globally for everyone — this doesn't prevent hitting that ceiling under
+# real concurrent load from many different users, but it does stop a single
+# client (accidental retry loop, or someone hammering the API) from burning
+# through it alone and tripping a rate limit that then affects every other
+# user. No auth exists, so throttling is scoped by IP (DRF's ScopedRateThrottle
+# with AnonRateThrottle as the class does this automatically).
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.ScopedRateThrottle'],
+    'DEFAULT_THROTTLE_RATES': {
+        'plan-trip': '10/minute',
+        'reverse-geocode': '20/minute',
+    },
+}
+
 ROOT_URLCONF = 'eld_planner.urls'
 
 TEMPLATES = [

@@ -9,6 +9,8 @@ from .services.routing import RoutingError, get_route
 
 
 class ReverseGeocodeView(APIView):
+    throttle_scope = 'reverse-geocode'
+
     def get(self, request):
         lat_raw = request.query_params.get("lat")
         lon_raw = request.query_params.get("lon")
@@ -30,6 +32,8 @@ class ReverseGeocodeView(APIView):
 
 
 class PlanTripView(APIView):
+    throttle_scope = 'plan-trip'
+
     def post(self, request):
         serializer = TripRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
