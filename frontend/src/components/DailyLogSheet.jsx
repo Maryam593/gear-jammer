@@ -109,7 +109,6 @@ export default function DailyLogSheet({ dayIndex, segments, recap, tripMeta, dri
 
       <div className="overflow-x-auto">
         <svg
-          data-log-sheet-svg={dayIndex}
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
           className="min-w-[760px] text-slate-700 dark:text-slate-300"
           role="img"

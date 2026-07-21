@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Download, Loader2, X } from 'lucide-react'
 import RouteMap from './RouteMap'
 import StopsList from './StopsList'
@@ -66,36 +66,23 @@ function DriverNameModal({ initialValue, onCancel, onConfirm }) {
 // History detail view (no `route` — it's excluded from what's persisted to
 // localStorage, so the map section is simply omitted there).
 export default function TripResultView({ route, stops, daily_logs, tripMeta }) {
-  const logSheetsRef = useRef(null)
   const [exporting, setExporting] = useState(false)
   const [driverName, setDriverName] = useState('')
   const [showNamePrompt, setShowNamePrompt] = useState(false)
-  const [pendingDownload, setPendingDownload] = useState(false)
 
-  // The PDF is a rasterized snapshot of the on-screen SVGs, so the driver
-  // name must already be in the DOM before we capture it. Setting name state
-  // and firing the export in the same click handler would race React's
-  // render — this effect waits until the state update has actually
-  // committed (i.e. DailyLogSheet has re-rendered with the new name) before
-  // running the export.
-  useEffect(() => {
-    if (!pendingDownload) return
-    setPendingDownload(false)
-    ;(async () => {
-      setExporting(true)
-      try {
-        const { exportLogSheetsPDF } = await import('../lib/exportLogSheets')
-        await exportLogSheetsPDF(logSheetsRef.current, tripMeta)
-      } finally {
-        setExporting(false)
-      }
-    })()
-  }, [pendingDownload, tripMeta])
-
-  function confirmDownload(name) {
+  // Drawn directly from daily_logs/tripMeta data (see exportLogSheets.js) —
+  // no DOM capture involved, so there's no render-timing to wait on; the
+  // name typed into the modal can be used immediately.
+  async function confirmDownload(name) {
     setDriverName(name)
     setShowNamePrompt(false)
-    setPendingDownload(true)
+    setExporting(true)
+    try {
+      const { exportLogSheetsPDF } = await import('../lib/exportLogSheets')
+      await exportLogSheetsPDF({ daily_logs, tripMeta, driverName: name })
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
@@ -124,7 +111,7 @@ export default function TripResultView({ route, stops, daily_logs, tripMeta }) {
         </button>
       </div>
 
-      <div ref={logSheetsRef} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {daily_logs.map((day) => (
           <DailyLogSheet
             key={day.date_offset}
