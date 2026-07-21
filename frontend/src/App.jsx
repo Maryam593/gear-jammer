@@ -1,63 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Truck, Route as RouteIcon, History as HistoryIcon, Trash2 } from 'lucide-react'
 import TripForm from './components/TripForm'
 import TripResultView from './components/TripResultView'
 import CitationError from './components/CitationError'
+import SplashScreen from './components/SplashScreen'
+import TruckIllustration from './components/TruckIllustration'
 import { planTrip } from './api/tripApi'
 import { sampleResponse } from './api/fixtures/sampleResponse'
 import { loadHistory, saveHistoryEntry, clearHistory } from './lib/tripHistory'
 
 const useMock = new URLSearchParams(window.location.search).has('mock')
-
-// Flat-illustration delivery truck (filled shapes, not line-art), with a
-// gentle bob and genuinely spinning wheels (see .truck-illustration in
-// index.css) — a decorative header mascot, not a functional icon.
-function TruckIllustration() {
-  return (
-    <svg
-      className="truck-illustration hidden h-16 w-44 shrink-0 sm:block"
-      viewBox="0 0 176 80"
-      aria-hidden="true"
-    >
-      {/* trailer */}
-      <rect x="6" y="18" width="92" height="42" rx="7" fill="#ea580c" stroke="#1e293b" strokeWidth="2.5" />
-      <rect x="18" y="30" width="68" height="4" rx="2" fill="#fdba74" />
-      <rect x="18" y="40" width="68" height="4" rx="2" fill="#fdba74" />
-
-      {/* cab */}
-      <path
-        d="M98 60V38a4 4 0 014-4h20.5a8 8 0 016.1 2.83l11.6 13.67H150a4 4 0 014 4v5.5"
-        fill="#1e293b"
-        stroke="#1e293b"
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-      />
-      {/* windshield */}
-      <path d="M106 40a3 3 0 013-3h13.6a4 4 0 013.1 1.47L133 46h-27z" fill="#bae6fd" />
-      {/* headlight */}
-      <circle cx="151" cy="52" r="3.2" fill="#fde047" />
-      {/* bumper */}
-      <rect x="98" y="58" width="56" height="5" rx="2.5" fill="#334155" />
-
-      {/* wheels */}
-      <g className="wheel">
-        <circle cx="30" cy="63" r="11" fill="#1e293b" />
-        <circle cx="30" cy="63" r="5" fill="#e2e8f0" />
-        <rect x="28.5" y="53" width="3" height="20" fill="#1e293b" />
-        <rect x="20" y="61.5" width="20" height="3" fill="#1e293b" />
-      </g>
-      <g className="wheel">
-        <circle cx="128" cy="63" r="11" fill="#1e293b" />
-        <circle cx="128" cy="63" r="5" fill="#e2e8f0" />
-        <rect x="126.5" y="53" width="3" height="20" fill="#1e293b" />
-        <rect x="118" y="61.5" width="20" height="3" fill="#1e293b" />
-      </g>
-
-      {/* road */}
-      <line x1="0" y1="74" x2="176" y2="74" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" strokeDasharray="10 8" />
-    </svg>
-  )
-}
 
 function ResultSkeleton() {
   return (
@@ -107,6 +59,19 @@ export default function App() {
   const [error, setError] = useState(null)
   const [history, setHistory] = useState(() => loadHistory())
   const [selectedHistoryId, setSelectedHistoryId] = useState(null)
+  const [splashVisible, setSplashVisible] = useState(true)
+  const [splashMounted, setSplashMounted] = useState(true)
+
+  useEffect(() => {
+    const hide = setTimeout(() => setSplashVisible(false), 2000)
+    // matches the 500ms fade duration in SplashScreen.jsx — unmount only
+    // after the fade-out finishes, not before.
+    const unmount = setTimeout(() => setSplashMounted(false), 2500)
+    return () => {
+      clearTimeout(hide)
+      clearTimeout(unmount)
+    }
+  }, [])
 
   async function handleSubmit(form) {
     setLoading(true)
@@ -135,6 +100,8 @@ export default function App() {
 
   return (
     <div className="app-bg min-h-svh">
+      {splashMounted && <SplashScreen visible={splashVisible} />}
+
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8">
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -149,7 +116,7 @@ export default function App() {
               </p>
             </div>
           </div>
-          <TruckIllustration />
+          <TruckIllustration className="hidden h-16 w-44 sm:block" />
         </header>
 
         <div className="road-divider" aria-hidden="true" />
