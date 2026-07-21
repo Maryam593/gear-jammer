@@ -1,0 +1,69 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Subtle dot-grid page texture, evoking a map — kept faint so it never
+   competes with content. Applied to the app's root wrapper, not <body>,
+   since the wrapper already owns the opaque light/dark background. */
+.app-bg {
+  background-color: #ffffff;
+  background-image: radial-gradient(circle, #e2ded6 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+@media (prefers-color-scheme: dark) {
+  .app-bg {
+    background-color: #020617;
+    background-image: radial-gradient(circle, #1e293b 1.5px, transparent 1.5px);
+  }
+}
+
+/* Signature "road" divider: an asphalt strip with dashed lane markings,
+   used once between the header and the tab nav. */
+.road-divider {
+  height: 10px;
+  border-radius: 9999px;
+  background-color: #334155;
+  background-image: repeating-linear-gradient(to right, #fbbf24 0 18px, transparent 18px 34px);
+  background-size: 100% 3px;
+  background-position: center;
+  background-repeat: repeat-x;
+}
+
+/* Header truck illustration: a gentle bob, and wheels that actually spin. */
+.truck-illustration {
+  animation: truck-bob 3s ease-in-out infinite;
+}
+.truck-illustration .wheel {
+  animation: wheel-spin 2.2s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes truck-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes wheel-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .truck-illustration,
+  .truck-illustration .wheel {
+    animation: none;
+  }
+}
